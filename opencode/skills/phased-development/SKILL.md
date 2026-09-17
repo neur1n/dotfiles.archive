@@ -19,10 +19,11 @@ an explicit human action. An override does not delegate human-only Git
 operations to the agent or permit fabricated approval or evidence.
 
 - **Agent:** scaffolds, plans, implements, tests, inventories changes, performs
-  advisory review, inspects outputs, proposes semantic commit messages, and
-  verifies Git identity read-only.
-- **Human:** reviews plans and implementations, confirms scope, controls
-  staging, records tree IDs, gives dispositions, and commits.
+  advisory review, maintains governance records, inspects outputs, proposes
+  semantic commit messages, and performs read-only Git inspection.
+- **Human:** reviews governance and implementation, confirms or changes scope,
+  controls Git operations that alter repository state, and provides review
+  feedback or authorization.
 
 The agent must not stage, unstage, update the index, run `git write-tree`,
 commit, amend, push, or alter branches, tags, refs, or history.
@@ -121,13 +122,15 @@ in context. Prefer compact routing or status results over full record content.
 Use this loop for implementation and governance transitions after selecting the
 context above:
 
-1. Confirm that the selected workstream has human-approved executable scope.
-2. Before drafting or revising a plan, read and follow `skeleton/plan.md`, then
-   run the exact-tree review. The human commits the approved plan and its
-   governance before implementation begins.
-3. Implement the approved scope, run applicable checks, inspect relevant
-   output, inventory every changed path, and propose candidate scope.
-4. Run the exact-tree review for the implementation.
+1. Establish executable scope through the applicable governance process and
+   human authorization.
+2. Before drafting or revising a plan, read and follow `skeleton/plan.md`.
+3. Use governance maintenance for governance changes.
+4. Implement the authorized code scope, run applicable checks, inspect relevant
+   output, inventory every changed path, and report the candidate scope.
+5. Use implementation review for implementation changes.
+6. After the human supplies review feedback or authorization, make only the
+   corresponding governance updates.
 
 Use an issue only when executable, deferred, blocked, or cross-session work
 benefits from separate tracking. Use a decision for a durable technical or
@@ -139,21 +142,50 @@ must not grow with project history. When creating or reconciling it, read and
 follow `skeleton/state.md`; keep durable status, evidence, rationale, review
 inventories, and completed history in their canonical records and Git.
 
-## Exact-Tree Review
+## Governance Maintenance
 
-1. The agent proposes scope, acceptance criteria, checks, risks, and
-   limitations.
-2. The human confirms scope, stages the complete candidate, runs `git
-   write-tree`, and records the base commit, tree ID, and staged paths.
-3. The human reviews, approves, requests changes, rejects, or abandons the
-   candidate. Candidate-content changes require a new tree ID and renewed
-   review.
-4. Before an approved commit, the agent verifies read-only that the base and
-   index still match the reviewed candidate and proposes a semantic commit
-   message. The human commits.
-5. The agent verifies the committed tree, records the commit and disposition in
-   the durable review, updates the smallest correct set of records, and
-   reconciles `STATE.md`. The human commits governance.
+Use this process for governance maintenance.
+
+1. The agent prepares or revises governance and identifies the affected records
+   and relevant evidence for human review.
+2. The human reviews the result and provides feedback or authorizes a
+   transition.
+3. When feedback requires further work, the agent revises the content and
+   identifies the resulting change for review again.
+4. When the human authorizes a transition, the agent performs the corresponding
+   governance maintenance and proposes a semantic commit message.
+5. An authorization applies only to the reviewed scope and transition.
+   Unrelated changes are not included silently.
+
+## Implementation Review
+
+Use this process for implementation changes.
+
+1. The agent finishes the implementation, runs applicable checks, inspects
+   relevant output, inventories changed paths, and reports scope, acceptance
+   criteria, checks, risks, and limitations.
+2. The human stages the intended candidate and runs `git write-tree`.
+3. The human gives the agent the candidate tree ID and any additional context
+   needed to identify it.
+4. The agent may record the tree ID in the appropriate governance record and
+   inspect that exact tree using read-only operations. The human reviews the
+   candidate and provides feedback or authorization.
+5. If the implementation content changes after the tree ID was supplied, the
+   human stages the new candidate and provides a new tree ID. The agent treats
+   the new identity as a new review round.
+6. When the human authorizes the code transition, the agent provides a semantic
+   code commit message. The human commits the candidate and provides the commit
+   hash.
+7. The agent verifies read-only that the committed tree corresponds to the
+   reviewed candidate, updates the relevant governance using the supplied
+   evidence and decision, and provides a corresponding governance commit
+   message.
+
+A human may commit a candidate before final review feedback when external
+testing requires it. That commit provides Git provenance but does not by itself
+authorize governance maintenance. Later human feedback determines the next
+transition. If the committed content differs from the supplied tree ID, it is a
+different candidate and requires a new tree ID.
 
 When this kernel does not cover an exceptional transition, ask the human rather
 than inventing policy or approval.
